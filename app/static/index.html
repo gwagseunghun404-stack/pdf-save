@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KMAC 슬라이드 PDF 다운로더</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:640px;margin:40px auto;padding:0 16px;line-height:1.5}
+textarea{width:100%;height:120px;box-sizing:border-box;padding:8px}
+button{padding:10px 20px;font-size:16px;margin-top:8px;cursor:pointer}
+#msg{margin-top:12px;color:#555}
+</style></head><body>
+<h1>KMAC 슬라이드 PDF 다운로더</h1>
+<p>전자책 주소를 한 줄에 하나씩 입력하면 순서대로 하나의 PDF로 묶어 다운로드합니다.</p>
+<textarea id="urls" placeholder="https://edu.kmac.co.kr/ebook/2026_kmes/02/">https://edu.kmac.co.kr/ebook/2026_kmes/02/</textarea>
+<button id="go">PDF 다운로드</button>
+<div id="msg"></div>
+<script>
+go.onclick=async()=>{
+  const list=urls.value.split("\n").map(s=>s.trim()).filter(Boolean);
+  if(!list.length){msg.textContent="URL을 입력하세요.";return}
+  msg.textContent="슬라이드를 수집하고 PDF를 만드는 중...";go.disabled=true;
+  try{
+    const q=list.map(u=>"url="+encodeURIComponent(u)).join("&");
+    const r=await fetch("/api/pdf?"+q);
+    if(!r.ok){msg.textContent=(await r.json()).detail||"오류가 발생했습니다.";return}
+    const a=document.createElement("a");a.href=URL.createObjectURL(await r.blob());
+    a.download="kmac-slides.pdf";a.click();msg.textContent="완료!";
+  }catch(e){msg.textContent="오류: "+e}finally{go.disabled=false}
+};
+</script></body></html>
